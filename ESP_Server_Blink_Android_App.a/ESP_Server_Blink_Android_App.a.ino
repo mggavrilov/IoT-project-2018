@@ -22,23 +22,20 @@ double pres = 0;
 
 int touchPin = D7;
 volatile byte state = LOW;
-int mode = LOW;
 
 void callback() {
   Serial.println(digitalRead(touchPin));
   state = !state;
   digitalWrite(LED_BUILTIN, state);
-  mode = state;
 }
 
 const int led = 13;
 
 void handleRoot() {
-  digitalWrite(LED_BUILTIN, mode);
-  String result = (mode == HIGH ? "off" : "on");
+  state = !state;
+  digitalWrite(LED_BUILTIN, state);
+  String result = (state == HIGH ? "off" : "on");
   server.send(200, "text/plain", result);
-  if(mode == HIGH) {mode = LOW;}
-  else {mode = HIGH;}
 }
 
 void handleNotFound(){
@@ -115,7 +112,7 @@ void setup() {
   });
 
   server.on("/lamp", [](){
-    String result = (mode == HIGH ? "off" : "on");
+    String result = (state == HIGH ? "off" : "on");
     server.send(200, "text/plain", result);
   });
 
@@ -127,13 +124,6 @@ void setup() {
 
 void loop() {
    server.handleClient();
-   
-//   int pushed = digitalRead(buttonPin);
-//   while(pushed != button) {
-//    delay(10);
-//   }
-//   button = pushed;
-//   digitalWrite(LED_BUILTIN, button);
 }
 
 void scanTemperature() {

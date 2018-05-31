@@ -6,15 +6,37 @@
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
 #include <ESP8266mDNS.h>
 
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+Adafruit_BME280 bme; // I2C
+unsigned long delayTime;
 ESP8266WebServer server(80);
 
+double temp = 0;
+double humi = 0;
+double pres = 0;
+
+int touchPin = D7;
+volatile byte state = LOW;
 int mode = LOW;
+
+void callback() {
+  Serial.println(digitalRead(touchPin));
+  state = !state;
+  digitalWrite(LED_BUILTIN, state);
+  mode = state;
+}
 
 const int led = 13;
 
 void handleRoot() {
   digitalWrite(LED_BUILTIN, mode);
-  server.send(200, "text/plain", "hello from esp8266!");
+  String result = (mode == HIGH ? "off" : "on");
+  server.send(200, "text/plain", result);
   if(mode == HIGH) {mode = LOW;}
   else {mode = HIGH;}
 }
@@ -37,9 +59,22 @@ void handleNotFound(){
 }
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(touchPin, INPUT);
+
+  attachInterrupt(digitalPinToInterrupt(touchPin), callback, RISING);
+
+  bool status;
+    Wire.begin(D4, D3);
+    // default settings
+    // (you can also pass in a Wire library object like &Wire2)
+    status = bme.begin(0x76);  
+    if (!status) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        while (1);
+    }
+    delayTime = 1000;
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -52,13 +87,6 @@ void setup() {
   //set custom ip for portal
   wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
 
-  //fetches ssid and pass from eeprom and tries to connect
-  //if it does not connect it starts an access point with the specified name
-  //here  "AutoConnectAP"
-  //and goes into a blocking loop awaiting configuration
-  //wifiManager.autoConnect("AutoConnectAP");
-  //or use this for auto generated name ESP + ChipID
-  //wifiManager.autoConnect();
 
   
   //if you get here you have connected to the WiFi
@@ -76,8 +104,19 @@ void setup() {
 
   server.on("/", handleRoot);
 
-  server.on("/inline", [](){
-    server.send(200, "text/plain", "this works as well");
+  server.on("/temp", []() {
+    scanTemperature();
+    String s = String(temp, 2);
+    s += ",";
+    s += String(pres, 2);
+    s += ",";
+    s += String(humi, 2);    
+    server.send(200, "text/plain", s);
+  });
+
+  server.on("/lamp", [](){
+    String result = (mode == HIGH ? "off" : "on");
+    server.send(200, "text/plain", result);
   });
 
   server.onNotFound(handleNotFound);
@@ -88,5 +127,17 @@ void setup() {
 
 void loop() {
    server.handleClient();
-    
+   
+//   int pushed = digitalRead(buttonPin);
+//   while(pushed != button) {
+//    delay(10);
+//   }
+//   button = pushed;
+//   digitalWrite(LED_BUILTIN, button);
+}
+
+void scanTemperature() {
+  temp = bme.readTemperature();
+  pres = bme.readPressure() / 100.0F;
+  humi = bme.readHumidity();
 }

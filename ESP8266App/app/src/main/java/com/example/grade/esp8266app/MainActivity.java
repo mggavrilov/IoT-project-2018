@@ -20,7 +20,7 @@ import com.android.volley.toolbox.Volley;
 public class MainActivity extends AppCompatActivity {
 
     private ToggleButton button;
-    private TextView text;
+    //private TextView text;
     private TextView textTemp;
     private TextView textPres;
     private TextView textHumi;
@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         this.button = findViewById(R.id.button);
-        this.text = findViewById(R.id.text);
+        //this.text = findViewById(R.id.text);
         this.textTemp = findViewById(R.id.textTemp);
         this.textPres = findViewById(R.id.textPres);
         this.textHumi = findViewById(R.id.textHumi);
@@ -53,14 +53,14 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(String response) {
                                 // Display the first 500 characters of the response string.
-                                text.setText("Response is: " + response);
+                                //text.setText("Response is: " + response);
                                 button.setChecked(response.equals("on"));
                             }
                         }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("asd", error.getMessage());
-                        text.setText("That didn't work!");
+                        //text.setText("That didn't work!");
                     }
                 });
 
@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("asd", "Error");
-                        text.setText("That didn't work!");
+//                        text.setText("That didn't work!");
                     }
                 });
                 queue.add(stringRequest);
@@ -121,8 +121,8 @@ public class MainActivity extends AppCompatActivity {
                                     public void run() {
 
                                         Log.d(":)", "Data! " + Thread.currentThread().getName());
-                                        text.setText("Response is: " + response);
-                                        button.setChecked(response.equals("on"));
+//                                        text.setText("Response is: " + response);
+                                        button.setChecked(!response.equals("on"));
 
                                     }
                                 }));
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.d("asd", "error!");
-                        text.setText("That didn't work 2 !");
+//                        text.setText("That didn't work 2 !");
                     }
                 });
                 queue.add(stringRequest2);

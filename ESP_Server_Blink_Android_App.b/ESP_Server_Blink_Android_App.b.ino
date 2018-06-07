@@ -8,11 +8,11 @@
 
 #include <Wire.h>
 #include <SPI.h>
-//#include <Adafruit_Sensor.h>
-//#include <Adafruit_BME280.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
-//Adafruit_BME280 bme; // I2C
+Adafruit_BME280 bme; // I2C
 unsigned long delayTime;
 ESP8266WebServer server(80);
 
@@ -69,16 +69,16 @@ void setup() {
 
 //  attachInterrupt(digitalPinToInterrupt(touchPin), callback, RISING);
 
-//  bool status;
-//    Wire.begin(D4, D3);
+  bool status;
+    Wire.begin(D4, D3); // SDA, 
 //    // default settings
 //    // (you can also pass in a Wire library object like &Wire2)
-//    status = bme.begin(0x76);  
-//    if (!status) {
-//        Serial.println("Could not find a valid BME280 sensor, check wiring!");
-//        while (1);
-//    }
-//    delayTime = 1000;
+    status = bme.begin(0x76);  
+    if (!status) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        while (1);
+    }
+    delayTime = 1000;
 
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
@@ -108,15 +108,15 @@ void setup() {
 
   server.on("/", handleRoot);
 
-//  server.on("/temp", []() {
-//    scanTemperature();
-//    String s = String(temp, 2);
-//    s += ",";
-//    s += String(pres, 2);
-//    s += ",";
-//    s += String(humi, 2);    
-//    server.send(200, "text/plain", s);
-//  });
+  server.on("/temp", []() {
+    scanTemperature();
+    String s = String(temp, 2);
+    s += ",";
+    s += String(pres, 2);
+    s += ",";
+    s += String(humi, 2);    
+    server.send(200, "text/plain", s);
+  });
 
   server.on("/lamp", [](){
     String result = (state == HIGH ? "off" : "on");
@@ -133,8 +133,8 @@ void loop() {
    server.handleClient();
 }
 
-//void scanTemperature() {
-//  temp = bme.readTemperature();
-//  pres = bme.readPressure() / 100.0F;
-//  humi = bme.readHumidity();
-//}
+void scanTemperature() {
+  temp = bme.readTemperature();
+  pres = bme.readPressure() / 100.0F;
+  humi = bme.readHumidity();
+}
